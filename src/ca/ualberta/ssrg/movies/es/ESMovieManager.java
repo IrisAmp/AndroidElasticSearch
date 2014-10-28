@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -65,10 +66,47 @@ public class ESMovieManager implements IMovieManager {
 	 * Get movies with the specified search string. If the search does not
 	 * specify fields, it searches on all the fields.
 	 */
-	public List<Movie> searchMovies(String searchString, String field) {
+	public List<Movie> searchMovies(String searchString, String field)
+	{
 		List<Movie> result = new ArrayList<Movie>();
+		HttpClient client = new DefaultHttpClient();
+		HttpResponse response = null;
+		SearchResponse<Movie> parsedRespone;
 
-		// TODO: Implement search movies using ElasticSearch
+		if (searchString == null || "".equals(searchString))
+		{
+			// Empty string? GET IT ALL. 
+			searchString = "*";
+		}
+		
+		try
+		{
+			HttpPost searchRequest = createSearchRequest(searchString, field);
+			response = client.execute(searchRequest);
+			
+			Log.i(TAG, response.getStatusLine().toString());
+			
+			parsedRespone = parseSearchResponse(response);
+			
+			Hits<Movie> hits = parsedRespone.getHits();
+			
+			if (hits != null)
+			{
+				for (SearchHit<Movie> hit : hits.getHits())
+					result.add(hit.getSource());
+			}
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
 		
 		return result;
 	}

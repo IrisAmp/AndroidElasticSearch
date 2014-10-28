@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -79,6 +80,17 @@ public class MainActivity extends Activity {
 				return true;
 			}
 		});
+		
+		Button searchButton = (Button) this.findViewById(R.id.button1);
+		searchButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v)
+			{
+				EditText entry = (EditText) MainActivity.this.findViewById(R.id.editText1);
+				MainActivity.this.search(entry);
+			}
+		});
 	}
 
 	@Override
@@ -86,7 +98,10 @@ public class MainActivity extends Activity {
 		super.onResume();
 
 		// Refresh the list when visible
-		// TODO: Search all
+		movies.clear();
+
+		Thread thread = new SearchThread("");
+		thread.start();
 		
 	}
 
@@ -98,9 +113,11 @@ public class MainActivity extends Activity {
 		movies.clear();
 
 		// TODO: Extract search query from text view
+		String query = ((EditText) view).getText().toString();
 		
 		// TODO: Run the search thread
-		
+		Thread thread = new SearchThread(query);
+		thread.start();
 	}
 	
 	/**
@@ -126,7 +143,21 @@ public class MainActivity extends Activity {
 
 	class SearchThread extends Thread {
 		// TODO: Implement search thread
+		private String search;
 		
+		public SearchThread(String s)
+		{
+			search = s;
+		}
+		
+		@Override
+		public void run()
+		{
+			movies.clear();
+			movies.addAll(movieManager.searchMovies(search, null));
+			
+			runOnUiThread(doUpdateGUIList);
+		}
 	}
 
 	
